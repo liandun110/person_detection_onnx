@@ -1,8 +1,5 @@
-#!/usr/bin/env python
-# -*- coding: UTF-8 -*-
 import cv2
 import onnxruntime
-import argparse
 import numpy as np
 
 
@@ -84,30 +81,15 @@ class Detector():
     检测类
     """
 
-    def __init__(self, opt):
+    def __init__(self):
         super(Detector, self).__init__()
-        self.img_size = opt.img_size
-        self.threshold = opt.conf_thres
-        self.iou_thres = opt.iou_thres
+        self.img_size = 640
+        self.threshold = 0.25
+        self.iou_thres = 0.45
         self.stride = 1
-        self.weights = opt.weights
+        self.weights = 'yolov5s.onnx'
         self.init_model()
-        self.names = ["person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
-                      "traffic light",
-                      "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat", "dog", "horse", "sheep",
-                      "cow",
-                      "elephant", "bear", "zebra", "giraffe", "backpack", "umbrella", "handbag", "tie", "suitcase",
-                      "frisbee",
-                      "skis", "snowboard", "sports ball", "kite", "baseball bat", "baseball glove", "skateboard",
-                      "surfboard",
-                      "tennis racket", "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana",
-                      "apple",
-                      "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair", "couch",
-                      "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse", "remote", "keyboard",
-                      "cell phone",
-                      "microwave", "oven", "toaster", "sink", "refrigerator", "book", "clock", "vase", "scissors",
-                      "teddy bear",
-                      "hair drier", "toothbrush"]
+        self.names = ["person"]
 
     def init_model(self):
         """
@@ -160,7 +142,7 @@ class Detector():
             classID = np.argmax(scores)
             confidence = scores[classID] * detection[4]  # 置信度为类别的概率和目标框概率值得乘积
 
-            if confidence > self.threshold:
+            if confidence > self.threshold and classID == 0:
                 box = detection[0:4]
                 (centerX, centerY, width, height) = box.astype("int")
                 x = int(centerX - (width / 2))
@@ -182,9 +164,9 @@ class Detector():
         return im, pred_boxes, pred_confes, pred_classes
 
 
-def main(opt):
-    det = Detector(opt)
-    image = cv2.imread(opt.img)
+def main():
+    det = Detector()
+    image = cv2.imread('img.png')
     shape = (det.img_size, det.img_size)
 
     img, pred_boxes, pred_confes, pred_classes = det.detect(image)
@@ -199,21 +181,9 @@ def main(opt):
             x0, y0, x1, y1 = box[0], box[1], box[2], box[3]
             # 执行画图函数
             cv2.rectangle(image, (x0, y0), (x1, y1), (0, 0, 255), thickness=2)
-            cv2.putText(image, '{0}--{1:.2f}'.format(pred_classes[i], pred_confes[i]), (x0, y0 - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), thickness=1)
+            cv2.rectangle(image, (x0, y0), (x1, y1), (0, 0, 255), thickness=2)
     cv2.imwrite("result.jpg", image)
 
 
-#
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', nargs='+', type=str, default='yolov5s.onnx', help='onnx path(s)')
-    parser.add_argument('--img', type=str, default='img.png', help='source')  # file/folder, 0 for webcam
-    parser.add_argument('--img-size', type=int, default=640, help='inference size (pixels)')
-    parser.add_argument('--conf-thres', type=float, default=0.25, help='object confidence threshold')
-    parser.add_argument('--iou-thres', type=float, default=0.45, help='IOU threshold for NMS')
-    parser.add_argument('--line-thickness', default=1, type=int, help='bounding box thickness (pixels)')
-    parser.add_argument('--hide-labels', default=False, action='store_true', help='hide labels')
-    parser.add_argument('--hide-conf', default=False, action='store_true', help='hide confidences')
-    opt = parser.parse_args()
-    main(opt)
+    main()
