@@ -2,7 +2,6 @@ import cv2
 import onnxruntime
 import numpy as np
 
-
 def letterbox(img, new_shape=(640, 640), auto=False, scaleFill=False, scaleUp=True):
     """
     python的信封图片缩放
