@@ -162,7 +162,6 @@ class Detector():
                     pred_classes.append(classIds[i])
         return im, pred_boxes, pred_confes, pred_classes
 
-
 def main():
     det = Detector()
     image = cv2.imread('img.png')
